@@ -23,11 +23,12 @@ This repository serves as my living portfolio, technical knowledge base, and lab
 
 | # | Project / Module | Category | Primary Tech Stack | Core Concepts & Architecture Covered | Status |
 |---|---|---|---|---|:---:|
-| 01 | [**Basic Multi-Tier VPC Setup**](./basic-vpc-setup/) | Cloud Networking & IaC | **Terraform**, **AWS** (VPC, Subnets, NAT GW, IGW, NACL, S3 Endpoint) | • 3-Tier Enterprise Network (Public, Application, Database, Management, Platform)<br>• Multi-AZ high availability & subnet isolation<br>• Dynamic HCL (`data.aws_availability_zones`, `cidrsubnet`, `dynamic` blocks)<br>• Provider `default_tags` and lock file (`.terraform.lock.hcl`) integrity | **Completed** ✅ |
-| 02 | [**DeskKlean CI/CD Pipeline**](./ci-cd-deskklean.md)<br>([GitHub Repo](https://github.com/chairielazizi/deskklean)) | Automation & Release Engineering | **GitHub Actions**, **Electron Builder**, **Node.js** | • Cloud-based cross-compilation on Windows runners<br>• Multi-stage CI pipeline (lint, type-check, unit tests, artifact packaging)<br>• Automated GitHub Releases, tag-triggered publishing, and auto-updater feeds | **Completed** ✅ |
-| 03 | *Containerization & Microservices (Upcoming)* | Containers | **Docker**, **Docker Compose** | • Multi-stage Docker builds, image slimming, non-root user security<br>• Container networking and local multi-service orchestration | *Planned* ⏳ |
-| 04 | *Kubernetes Cluster Orchestration (Upcoming)* | Orchestration | **Kubernetes**, **Helm**, **Minikube / EKS** | • Pods, Deployments, Services, ConfigMaps, Secrets, Ingress Controllers<br>• Zero-downtime rolling updates and declarative Helm charts | *Planned* ⏳ |
-| 05 | *Observability & Monitoring (Upcoming)* | SRE & Monitoring | **Prometheus**, **Grafana**, **CloudWatch** | • Infrastructure metrics collection, custom application dashboards, and alerting rules | *Planned* ⏳ |
+| 01 | [**Basic Multi-Tier VPC Setup**](./basic-vpc-setup/README.md) | Cloud Networking & IaC | **Terraform**, **AWS** (VPC, Subnets, NAT GW, IGW, NACL, S3 Endpoint) | • 3-Tier Enterprise Network (Public, Application, Database, Management, Platform)<br>• Multi-AZ high availability & subnet isolation<br>• Dynamic HCL (`data.aws_availability_zones`, `cidrsubnet`, `dynamic` blocks)<br>• Provider `default_tags` and lock file (`.terraform.lock.hcl`) integrity | **Completed** ✅ |
+| 02 | [**DeskKlean CI/CD Pipeline**](./deskklean-ci-cd/README.md)<br>([GitHub Repo](https://github.com/chairielazizi/deskklean)) | Automation & Release Engineering | **GitHub Actions**, **Electron Builder**, **Node.js** | • Cloud-based cross-compilation on Windows runners<br>• Multi-stage CI pipeline (lint, type-check, unit tests, artifact packaging)<br>• Automated GitHub Releases, tag-triggered publishing, and auto-updater feeds | **Completed** ✅ |
+| 03 | [**Prometheus Observability Stack**](./prometheus-observability-stack/learning-plan.md) | Observability & SRE | **Terraform**, **AWS EC2**, **Docker Compose**, **Prometheus**, **Grafana**, **Alertmanager**, **Node Exporter** | • EC2 provisioning via Terraform modules (EC2 + SG)<br>• Multi-container observability stack with Docker Compose<br>• Prometheus scraping, alerting rules, Alertmanager routing<br>• Grafana dashboard import (template 10180)<br>• File-based service discovery, promtool validation | **In Progress** 🚧 |
+| 04 | *Containerization & Microservices (Upcoming)* | Containers | **Docker**, **Docker Compose** | • Multi-stage Docker builds, image slimming, non-root user security<br>• Container networking and local multi-service orchestration | *Planned* ⏳ |
+| 05 | *Kubernetes Cluster Orchestration (Upcoming)* | Orchestration | **Kubernetes**, **Helm**, **Minikube / EKS** | • Pods, Deployments, Services, ConfigMaps, Secrets, Ingress Controllers<br>• Zero-downtime rolling updates and declarative Helm charts | *Planned* ⏳ |
+| 06 | *Observability & Monitoring (Upcoming)* | SRE & Monitoring | **Prometheus**, **Grafana**, **CloudWatch** | • Infrastructure metrics collection, custom application dashboards, and alerting rules | *Planned* ⏳ |
 
 ---
 
@@ -46,7 +47,12 @@ devops-project/
 │   ├── .terraform.lock.hcl        # Cryptographic dependency lock file
 │   ├── topology-map.jpg           # Visual architectural diagram
 │   └── README.md                  # Comprehensive module documentation and runbooks
-└── ci-cd-deskklean.md             # Deep-dive study on GitHub Actions & release automation
+├── deskklean-ci-cd/               # Desktop CI/CD & release automation project
+│   └── README.md                  # Deep-dive study on GitHub Actions & electron-builder
+└── prometheus-observability-stack/  # Observability stack project
+    ├── learning-plan.md           # Step-by-step build-from-scratch plan
+    ├── prometheus-stack-architecture.html  # Interactive Archify architecture diagram
+    └── prometheus-stack-architecture.png       # Static screenshot (PNG, dark mode)
 ```
 
 ### Engineering Principles Practiced Here
