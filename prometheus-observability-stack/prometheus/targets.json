@@ -1,0 +1,11 @@
+[
+  {
+    "targets": [
+      "__SERVER_IP__:9100"
+    ],
+    "labels": {
+      "job": "node-exporter",
+      "environment": "dev"
+    }
+  }
+]
