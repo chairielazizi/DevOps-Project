@@ -1,6 +1,6 @@
 # DeskKlean CI/CD — How `.github/workflows/ci.yml` and `electron-builder.yml` Work Together
 
-Reference project: `~/Documents/coding/antigravity-projects/DeskKlean/` (repo `chairielazizi/deskklean`, local branch `v1.1.0-work`).
+Reference project: `~/Documents/coding/antigravity-projects/DeskKlean/` (repo [`chairielazizi/deskklean`](https://github.com/chairielazizi/deskklean), local branch `v1.1.0-work`).
 
 ## What is CI/CD
 
