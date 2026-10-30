@@ -9,7 +9,7 @@ alerting:
     - static_configs:
         - targets: ['__SERVER_IP__:9093']
 
-rules_files:
+rule_files:
   - 'alertrules.yaml'
 
 scrape_configs:
@@ -17,8 +17,8 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: 'node_exporter'
+  - job_name: 'node-exporter'
     file_sd_configs:
       - files:
-          - /'etc/prometheus/targets.json'
+          - '/etc/prometheus/targets.json'
         refresh_interval: 30s
