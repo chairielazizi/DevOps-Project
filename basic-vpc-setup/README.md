@@ -611,3 +611,78 @@ Deletes all provisioned infrastructure in the exact reverse-dependency sequence 
 ```bash
 terraform destroy -auto-approve
 ```
+
+---
+
+## Dynamic Infrastructure Evolution & Recommendations
+
+This section tracks the ongoing refactoring of this infrastructure from static declarations to dynamic, DRY (Don't Repeat Yourself), and region-agnostic Terraform patterns.
+
+### Implemented Dynamic Enhancements
+
+1. **Dynamic Provider Default Tags**
+   - **What changed:** Configured `default_tags` inside the `provider "aws"` block in `main.tf` for `Environment = "Production"`, `EngineeredBy = "Terraform"`, and `Project = "DevOps-Basic-VPC"`.
+   - **Why:** Removed repetitive tag declarations across all 15+ resources. Any new resource created automatically inherits these tags, eliminating human error and keeping resource blocks clean.
+
+2. **Dynamic Ingress & Egress Rules (`dynamic` blocks in NACL)**
+   - **What changed:** Replaced 6 hardcoded static `ingress` and `egress` blocks in `aws_network_acl.database` with dynamic blocks that iterate over `aws_subnet.application`.
+   - **Why:** Rule numbers (`100 + ingress.key * 10`) and CIDR blocks (`ingress.value.cidr_block`) are dynamically generated from live application subnets. Adding or removing subnets automatically updates the database firewall rules without manual edits.
+
+3. **Dynamic Availability Zone Discovery (`data.aws_availability_zones`)**
+   - **What changed:** Introduced `data "aws_availability_zones" "available" { state = "available" }` and parameterized the AZ count using `var.az_count` (default: 3).
+   - **Why:** Eliminates hardcoded region-specific AZ names (`us-east-1a`, etc.). The codebase can now deploy into any AWS region worldwide without code adjustments. Both the subnet assignments and the subnet `Name` tags automatically adapt to the target region.
+
+4. **Dynamic CIDR Allocation with `cidrsubnet()`**
+   - **What changed:** Replaced string-concatenated CIDRs (`"10.0.${count.index + 1}.0/24"`) with the mathematical `cidrsubnet(var.vpc_cidr, 8, count.index + offset)` function.
+   - **Why:** Subnets mathematically derive from `var.vpc_cidr`. If the VPC CIDR is changed (e.g., from `10.0.0.0/16` to `172.16.0.0/16`), all subnet CIDRs recalculate automatically without IP collisions or manual edits.
+
+5. **Synchronized Route Table Associations**
+   - **What changed:** Changed route table association counts from `length(var.availability_zone)` to `var.az_count`.
+   - **Why:** Ensures the exact number of route table associations is created matching the dynamic subnet counts, avoiding `index out of range` errors if AZ counts vary.
+
+---
+
+### Future Dynamic Recommendations (Pending Implementation)
+
+These two recommendations can be adopted in future refactoring phases to further improve scalability and reduce boilerplate:
+
+1. **Recommendation A: Unified Route Table Associations via Locals (`concat()`)**
+   - **Current State:** Separate `aws_route_table_association` resource blocks exist for `application`, `management`, and `platform` subnets, even though all three associate with the same `aws_route_table.private.id`.
+   - **Proposed Change:** Concatenate the private subnet IDs in a local value:
+     ```hcl
+     locals {
+       private_subnet_ids = concat(
+         aws_subnet.application[*].id,
+         aws_subnet.management[*].id,
+         aws_subnet.platform[*].id,
+       )
+     }
+
+     resource "aws_route_table_association" "private" {
+       count          = length(local.private_subnet_ids)
+       subnet_id      = local.private_subnet_ids[count.index]
+       route_table_id = aws_route_table.private.id
+     }
+     ```
+   - **Advantage:** Condenses multiple repetitive resource declarations into a single manageable block.
+
+2. **Recommendation B: Data-Driven Subnet Architecture (Map of Tiers)**
+   - **Current State:** 5 distinct `aws_subnet` resource blocks (`public`, `application`, `database`, `management`, `platform`) totaling over 70 lines of boilerplate code.
+   - **Proposed Change:** Define tiers in a map variable or local:
+     ```hcl
+     variable "subnet_tiers" {
+       type = map(object({
+         cidr_offset = number
+         is_public   = bool
+       }))
+       default = {
+         public      = { cidr_offset = 1,  is_public = true }
+         application = { cidr_offset = 4,  is_public = false }
+         database    = { cidr_offset = 7,  is_public = false }
+         management  = { cidr_offset = 10, is_public = false }
+         platform    = { cidr_offset = 13, is_public = false }
+       }
+     }
+     ```
+     Then provision all tiers and subnets using a single nested `aws_subnet` resource with `for_each`.
+   - **Advantage:** Highly scalable, enterprise-grade pattern (similar to the official Terraform AWS VPC module) where adding a new subnet tier requires only adding an entry to the map.

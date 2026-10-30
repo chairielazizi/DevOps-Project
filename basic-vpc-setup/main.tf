@@ -10,6 +10,19 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
+
+  default_tags {
+    tags = {
+      Environment  = "Production"
+      EngineeredBy = "Terraform"
+      Project      = "DevOps-Basic-VPC"
+    }
+  }
+}
+
+# Dynamic number availability_zone
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
 #1. Create a VPC
@@ -18,19 +31,15 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
-    Name         = "basic-vpc-setup-vpc"
-    Environment  = "Production"
-    EngineeredBy = "Terraform"
+    Name = "basic-vpc-setup-vpc"
   }
 }
 
 #2. Create internet gateway
-resource "aws_internet_gateway" "main" {
+resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
   tags = {
-    Name         = "basic-vpc-setup-igw"
-    Environment  = "Production"
-    EngineeredBy = "Terraform"
+    Name = "basic-vpc-setup-igw"
   }
 }
 
@@ -38,78 +47,72 @@ resource "aws_internet_gateway" "main" {
 
 # Create public subnets
 resource "aws_subnet" "public" {
-  count  = length(var.availability_zone)
+  count  = var.az_count
   vpc_id = aws_vpc.main.id
   #   cidr_block = cidrsubnet(var.vpc_cidr, 8, count.index)
-  cidr_block              = "10.0.${count.index + 1}.0/24"
-  availability_zone       = var.availability_zone[count.index]
+  # cidr_block              = "10.0.${count.index + 1}.0/24"
+  cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index + 1)
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = true
   tags = {
-    # Name = "basic-vpc-setup-public-subnet-${count.index + 1}"
-    Name         = "basic-vpc-setup-public-subnet-${element(var.availability_zone, count.index)}"
-    Environment  = "Production"
-    EngineeredBy = "Terraform"
-    Tier         = "Public"
+    Name = "basic-vpc-setup-public-subnet-${data.aws_availability_zones.available.names[count.index]}"
+    Tier = "Public"
   }
 }
 
 # Create application subnets
 resource "aws_subnet" "application" {
-  count                   = length(var.availability_zone)
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.${count.index + 4}.0/24"
-  availability_zone       = var.availability_zone[count.index]
+  count  = var.az_count
+  vpc_id = aws_vpc.main.id
+  # cidr_block              = "10.0.${count.index + 4}.0/24"
+  cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index + 4)
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = false
   tags = {
-    Name         = "basic-vpc-setup-application-subnet-${element(var.availability_zone, count.index)}"
-    Environment  = "Production"
-    EngineeredBy = "Terraform"
-    Tier         = "Application"
+    Name = "basic-vpc-setup-application-subnet-${data.aws_availability_zones.available.names[count.index]}"
+    Tier = "Application"
   }
 }
 
 # Create database subnets
 resource "aws_subnet" "database" {
-  count                   = length(var.availability_zone)
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.${count.index + 7}.0/24"
-  availability_zone       = var.availability_zone[count.index]
+  count  = var.az_count
+  vpc_id = aws_vpc.main.id
+  # cidr_block              = "10.0.${count.index + 7}.0/24"
+  cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index + 7)
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = false
   tags = {
-    Name         = "basic-vpc-setup-database-subnet-${element(var.availability_zone, count.index)}"
-    Environment  = "Production"
-    EngineeredBy = "Terraform"
-    Tier         = "Database"
+    Name = "basic-vpc-setup-database-subnet-${data.aws_availability_zones.available.names[count.index]}"
+    Tier = "Database"
   }
 }
 
 # Create management subnets
 resource "aws_subnet" "management" {
-  count                   = length(var.availability_zone)
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.${count.index + 10}.0/24"
-  availability_zone       = var.availability_zone[count.index]
+  count  = var.az_count
+  vpc_id = aws_vpc.main.id
+  # cidr_block              = "10.0.${count.index + 10}.0/24"
+  cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index + 10)
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = false
   tags = {
-    Name         = "basic-vpc-setup-management-subnet-${element(var.availability_zone, count.index)}"
-    Environment  = "Production"
-    EngineeredBy = "Terraform"
-    Tier         = "Management"
+    Name = "basic-vpc-setup-management-subnet-${data.aws_availability_zones.available.names[count.index]}"
+    Tier = "Management"
   }
 }
 
 # Create platform subnets
 resource "aws_subnet" "platform" {
-  count                   = length(var.availability_zone)
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.${count.index + 13}.0/24"
-  availability_zone       = var.availability_zone[count.index]
+  count  = var.az_count
+  vpc_id = aws_vpc.main.id
+  # cidr_block              = "10.0.${count.index + 13}.0/24"
+  cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index + 13)
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = false
   tags = {
-    Name         = "basic-vpc-setup-platform-subnet-${element(var.availability_zone, count.index)}"
-    Environment  = "Production"
-    EngineeredBy = "Terraform"
-    Tier         = "Platform"
+    Name = "basic-vpc-setup-platform-subnet-${data.aws_availability_zones.available.names[count.index]}"
+    Tier = "Platform"
   }
 }
 
@@ -118,9 +121,7 @@ resource "aws_eip" "nat" {
   domain     = "vpc"
   depends_on = [aws_internet_gateway.igw]
   tags = {
-    Name         = "basic-vpc-setup-nat-eip"
-    Environment  = "Production"
-    EngineeredBy = "Terraform"
+    Name = "basic-vpc-setup-nat-eip"
   }
 }
 
@@ -129,9 +130,7 @@ resource "aws_nat_gateway" "nat" {
   subnet_id     = aws_subnet.public[0].id
   #   depends_on = [ aws_internet_gateway.igw ]
   tags = {
-    Name         = "basic-vpc-setup-nat-gateway"
-    Environment  = "Production"
-    EngineeredBy = "Terraform"
+    Name = "basic-vpc-setup-nat-gateway"
   }
 }
 
@@ -140,19 +139,17 @@ resource "aws_nat_gateway" "nat" {
 # Create public route table
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
-  route = {
+  route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.igw.id
   }
   tags = {
-    Name         = "basic-vpc-setup-public-route-table"
-    Environment  = "Production"
-    EngineeredBy = "Terraform"
+    Name = "basic-vpc-setup-public-route-table"
   }
 }
 
 resource "aws_route_table_association" "public" {
-  count          = length(var.availability_zone)
+  count          = var.az_count
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
@@ -160,31 +157,29 @@ resource "aws_route_table_association" "public" {
 # Create private route table
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
-  route = {
-    cidr_block     = "0.0.0/0"
+  route {
+    cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.nat.id
   }
   tags = {
-    Name         = "basic-vpc-setup-private-route-table"
-    Environment  = "Production"
-    EngineeredBy = "Terraform"
+    Name = "basic-vpc-setup-private-route-table"
   }
 }
 
 resource "aws_route_table_association" "application" {
-  count          = length(var.availability_zone)
+  count          = var.az_count
   subnet_id      = aws_subnet.application[count.index].id
   route_table_id = aws_route_table.private.id
 }
 
 resource "aws_route_table_association" "management" {
-  count          = length(var.availability_zone)
+  count          = var.az_count
   subnet_id      = aws_subnet.management[count.index].id
   route_table_id = aws_route_table.private.id
 }
 
 resource "aws_route_table_association" "platform" {
-  count          = length(var.availability_zone)
+  count          = var.az_count
   subnet_id      = aws_subnet.platform[count.index].id
   route_table_id = aws_route_table.private.id
 }
@@ -193,16 +188,14 @@ resource "aws_route_table_association" "platform" {
 resource "aws_route_table" "database" {
   vpc_id = aws_vpc.main.id
   tags = {
-    Name         = "basic-vpc-setup-database-route-table"
-    Environment  = "Production"
-    EngineeredBy = "Terraform"
+    Name = "basic-vpc-setup-database-route-table"
   }
 }
 
 resource "aws_route_table_association" "database" {
-  count          = length(var.availability_zone)
+  count          = var.az_count
   subnet_id      = aws_subnet.database[count.index].id
-  route_table_id = aws_route_table.private.id
+  route_table_id = aws_route_table.database.id
 }
 
 
@@ -212,62 +205,36 @@ resource "aws_network_acl" "database" {
   subnet_ids = [for subnet in aws_subnet.database : subnet.id]
 
   # Inbound rules
-  ingress {
-    rule_no    = 100
-    protocol   = "tcp"
-    action     = "allow"
-    from_port  = 3306 # MySQL port
-    to_port    = 3306
-    cidr_block = "10.0.4.0/24" # Allow traffic from application subnets
-  }
-  ingress {
-    rule_no    = 110
-    protocol   = "tcp"
-    action     = "allow"
-    from_port  = 3306 # MySQL port
-    to_port    = 3306
-    cidr_block = "10.0.5.0/24" # Allow traffic from application subnets
-  }
-  ingress {
-    rule_no    = 120
-    protocol   = "tcp"
-    action     = "allow"
-    from_port  = 3306 # MySQL port
-    to_port    = 3306
-    cidr_block = "10.0.6.0/24" # Allow traffic from application subnets
+  # Dynamically generates ingress block for each application subnets
+  dynamic "ingress" {
+    for_each = aws_subnet.application
+    content {
+      rule_no    = 100 + (ingress.key * 10) #100, 110, 120... automatically
+      protocol   = "tcp"
+      action     = "allow"
+      from_port  = 3306 # MySQL port
+      to_port    = 3306
+      cidr_block = ingress.value.cidr_block # Reads live subnet CIDR directly
+    }
   }
 
   # Outbound rules
-  egress {
-    rule_no = 100
-    # protocol = "-1" # All protocols
-    protocol   = "tcp"
-    action     = "allow"
-    from_port  = 1024
-    to_port    = 65535
-    cidr_block = "10.0.4.0/24" # Allow traffic to application subnets
-  }
-  egress {
-    rule_no    = 110
-    protocol   = "tcp"
-    action     = "allow"
-    from_port  = 1024
-    to_port    = 65535
-    cidr_block = "10.0.5.0/24" # Allow traffic to application subnets
-  }
-  egress {
-    rule_no    = 120
-    protocol   = "tcp"
-    action     = "allow"
-    from_port  = 1024
-    to_port    = 65535
-    cidr_block = "10.0.6.0/24" # Allow traffic to application subnets
+  # Dynamically generates ingress block for each application subnets
+  dynamic "egress" {
+    for_each = aws_subnet.application
+    content {
+      rule_no = 100 + (egress.key * 10) #100, 110, 120... automatically
+      # protocol = "-1" # All protocols
+      protocol   = "tcp"
+      action     = "allow"
+      from_port  = 1024
+      to_port    = 65535
+      cidr_block = egress.value.cidr_block # Reads live subnet CIDR directly
+    }
   }
 
   tags = {
-    Name         = "basic-vpc-setup-database-nacl"
-    Environment  = "Production"
-    EngineeredBy = "Terraform"
+    Name = "basic-vpc-setup-database-nacl"
   }
 }
 
@@ -281,8 +248,6 @@ resource "aws_vpc_endpoint" "s3" {
     aws_route_table.database.id
   ]
   tags = {
-    Name         = "basic-vpc-setup-s3-endpoint"
-    Environment  = "Production"
-    EngineeredBy = "Terraform"
+    Name = "basic-vpc-setup-s3-endpoint"
   }
 }
